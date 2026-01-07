@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Environment Variables (Secrets)
+.env.local
+
+# Contentlayer Generated Files (Build Artifacts)
+.contentlayer
