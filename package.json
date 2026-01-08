@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build:content": "contentlayer2 build",
-    "build": "npm run build:content && next build --webpack",
+    "build": "npm run build:content && next build",
     "start": "next start",
     "lint": "next lint"
   },
