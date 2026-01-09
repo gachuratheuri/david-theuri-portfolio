@@ -1,6 +1,7 @@
 ﻿import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -8,36 +9,38 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
+      fontFamily: {
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New'],
       },
+      letterSpacing: { architect: '0.22em' },
+      colors: {
+        ink: { 950: '#050505', 900: '#0b0b0f', 800: '#12121a' },
+        line: { dark: 'rgba(255,255,255,0.10)', light: 'rgba(2,6,23,0.10)' },
+        panel: {
+          dark: 'rgba(255,255,255,0.06)',
+          light: 'rgba(2,6,23,0.03)',
+          borderDark: 'rgba(255,255,255,0.12)',
+          borderLight: 'rgba(2,6,23,0.10)',
+        },
+        glow: { blue: '#2563eb', purple: '#7c3aed', cyan: '#06b6d4' },
+        brand: { 600: '#2563eb', 700: '#1d4ed8' },
+      },
+      boxShadow: {
+        glass: '0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 60px rgba(0,0,0,0.45)',
+      },
+      backdropBlur: { glass: '14px' },
       typography: {
-        DEFAULT: {
+        invert: {
           css: {
-            maxWidth: '75ch',
-            color: '#334155',
-            a: {
-              color: '#2563eb',
-              '&:hover': { color: '#1d4ed8' },
-            },
-            code: {
-              color: '#0f172a',
-              backgroundColor: '#f1f5f9',
-              padding: '0.2em 0.35em',
-              borderRadius: '0.25rem',
-              fontWeight: '500',
-            },
+            color: 'rgba(226,232,240,0.92)',
+            a: { color: '#93c5fd', '&:hover': { color: '#bfdbfe' } },
+            code: { color: '#e2e8f0', backgroundColor: 'rgba(255,255,255,0.06)' },
+            h1: { color: '#fff' },
+            h2: { color: '#fff' },
+            h3: { color: '#fff' },
+            strong: { color: '#fff' },
           },
         },
       },

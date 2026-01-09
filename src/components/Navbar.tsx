@@ -2,76 +2,64 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { HiMenu, HiX } from 'react-icons/hi'
 import { cn } from '@/lib/utils'
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Experience', href: '/experience' },
-  { name: 'Insights', href: '/insights' },
-  { name: 'Contact', href: '/contact' },
-] as const
+import { siteConfig } from '@/lib/site'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
 
-  const items = useMemo(() => navigation, [])
-
   return (
-    <nav className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
-      <div className="container-custom">
-        <div className="flex justify-between h-16 items-center">
-          <Link href="/" className="font-bold text-primary-700 text-lg">
-            David Theuri
-          </Link>
+    <nav className="sticky top-0 z-50 border-b border-line-light dark:border-line-dark bg-white/80 dark:bg-ink-950/70 backdrop-blur">
+      <div className="container-custom h-16 flex items-center justify-between">
+        <Link href="/" className="font-display tracking-tight text-lg text-slate-900 dark:text-white">
+          David Theuri
+        </Link>
 
-          <div className="hidden md:flex md:items-center md:gap-8">
-            {items.map((item) => {
-              const active = pathname === item.href
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'text-sm font-medium py-5 border-b-2 transition-colors',
-                    active
-                      ? 'text-primary-700 border-primary-700'
-                      : 'text-slate-600 border-transparent hover:text-primary-700 hover:border-primary-200'
-                  )}
-                >
-                  {item.name}
-                </Link>
-              )
-            })}
-          </div>
-
-          <button
-            type="button"
-            className="md:hidden text-slate-700 hover:text-primary-700"
-            aria-label="Toggle menu"
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <HiX className="h-6 w-6" /> : <HiMenu className="h-6 w-6" />}
-          </button>
+        <div className="hidden md:flex items-center gap-8">
+          {siteConfig.nav.map((item) => {
+            const active = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'text-sm font-semibold tracking-wide transition-colors',
+                  active ? 'text-brand-700 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                )}
+              >
+                {item.name.toUpperCase()}
+              </Link>
+            )
+          })}
+          <Link href="/contact" className="btn-primary py-2 px-4">CONTACT</Link>
         </div>
 
-        {open && (
-          <div className="md:hidden pb-4">
-            {items.map((item) => {
+        <button
+          type="button"
+          className="md:hidden text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+          aria-label="Toggle menu"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <HiX className="h-6 w-6" /> : <HiMenu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {open && (
+        <div className="md:hidden border-t border-line-light dark:border-line-dark bg-white dark:bg-ink-950">
+          <div className="container-custom py-4 space-y-1">
+            {siteConfig.nav.map((item) => {
               const active = pathname === item.href
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'block px-3 py-2 rounded-md text-base font-medium',
-                    active
-                      ? 'text-primary-700 bg-primary-50'
-                      : 'text-slate-700 hover:bg-slate-50'
+                    'block rounded-md px-3 py-2 font-semibold',
+                    active ? 'bg-slate-100 text-slate-900 dark:bg-white/5 dark:text-white' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5'
                   )}
                   onClick={() => setOpen(false)}
                 >
@@ -80,8 +68,8 @@ export default function Navbar() {
               )
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   )
 }

@@ -11,23 +11,43 @@ export const Insight = defineDocumentType(() => ({
     tags: { type: 'list', of: { type: 'string' }, required: true },
     jurisdiction: { type: 'list', of: { type: 'string' }, required: true },
     featured: { type: 'boolean', default: false },
-    sourceLinks: { type: 'json', required: false }, // [{ title, url, type }]
     seoTitle: { type: 'string', required: false },
-    seoDescription: { type: 'string', required: false },
+    seoDescription: { type: 'string', required: false }
   },
   computedFields: {
-    slug: {
-      type: 'string',
-      resolve: (d) => d._raw.flattenedPath.split('/').pop()!,
+    slug: { type: 'string', resolve: (d) => d._raw.flattenedPath.split('/').pop()! },
+    url: { type: 'string', resolve: (d) => `/insights/${d._raw.flattenedPath.split('/').pop()}` }
+  }
+}))
+
+export const CaseStudy = defineDocumentType(() => ({
+  name: 'CaseStudy',
+  filePathPattern: `case-studies/**/*.mdx`,
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    date: { type: 'date', required: true },
+    summary: { type: 'string', required: true },
+    lane: {
+      type: 'enum',
+      options: ['Tech/IT Transactions', 'Privacy/AI Governance', 'Telecom/Digital Regulation'],
+      required: true
     },
-    url: {
-      type: 'string',
-      resolve: (d) => `/insights/${d._raw.flattenedPath.split('/').pop()}`,
-    },
+    deliverables: { type: 'list', of: { type: 'string' }, required: true },
+    outcomes: { type: 'list', of: { type: 'string' }, required: false },
+    tools: { type: 'list', of: { type: 'string' }, required: false },
+    tags: { type: 'list', of: { type: 'string' }, required: true },
+    featured: { type: 'boolean', default: false },
+    seoTitle: { type: 'string', required: false },
+    seoDescription: { type: 'string', required: false }
   },
+  computedFields: {
+    slug: { type: 'string', resolve: (d) => d._raw.flattenedPath.split('/').pop()! },
+    url: { type: 'string', resolve: (d) => `/portfolio/${d._raw.flattenedPath.split('/').pop()}` }
+  }
 }))
 
 export default makeSource({
   contentDirPath: 'content',
-  documentTypes: [Insight],
+  documentTypes: [Insight, CaseStudy]
 })

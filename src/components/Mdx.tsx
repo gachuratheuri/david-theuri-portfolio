@@ -1,31 +1,10 @@
-﻿'use client'
-
-import Link from 'next/link'
-import { useMDXComponent } from 'next-contentlayer2/hooks'
+﻿import { useMDXComponent } from 'next-contentlayer2/hooks'
 import type { MDXComponents } from 'mdx/types'
 
-function isInternalHref(href: string) {
-  return href.startsWith('/') || href.startsWith('#')
-}
-
 const components: MDXComponents = {
-  a: ({ href = '', children, ...props }) => {
-    const hrefStr = String(href)
-
-    if (isInternalHref(hrefStr)) {
-      return (
-        <Link href={hrefStr} {...(props as any)}>
-          {children}
-        </Link>
-      )
-    }
-
-    return (
-      <a href={hrefStr} target="_blank" rel="noopener noreferrer" {...props}>
-        {children}
-      </a>
-    )
-  },
+  a: (props) => <a {...props} className="underline underline-offset-4" />,
+  ul: (props) => <ul {...props} className="list-disc pl-6" />,
+  ol: (props) => <ol {...props} className="list-decimal pl-6" />,
 }
 
 export default function Mdx({ code }: { code: string }) {

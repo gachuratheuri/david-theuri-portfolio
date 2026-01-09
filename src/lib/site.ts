@@ -1,16 +1,24 @@
 ﻿export const siteConfig = {
   name: 'David Theuri',
-  title: 'David Theuri | AI Governance & Privacy Law',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://davidtheuri.com',
+
+  title: 'David Theuri | Technology Lawyer, IT Transactions, Privacy & AI Governance',
   description:
-    'Kenyan-qualified legal professional specializing in privacy, data protection, and AI governance. LLM (QMUL).',
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://david.theuri.com',
+    'Kenyan-qualified Advocate with an LLM in Technology, Media & Telecommunications (QMUL) and IAPP certifications (CIPP/E, CIPM, AIGP), supporting regulated organisations across Africa, the UK and Europe.',
+
   email: process.env.CONTACT_EMAIL ?? 'gachura.theuri@gmail.com',
+  calendly: process.env.NEXT_PUBLIC_CALENDLY_URL ?? '',
+
   social: {
     linkedin: 'https://linkedin.com/in/david-theuri-080a251a5',
   },
-  cv: {
-    privacyAiIntl: '/cv/david-theuri-privacy-ai-governance.pdf',
-    legalComplianceIntl: '/cv/david-theuri-legal-compliance-international.pdf',
-    legalComplianceKe: '/cv/david-theuri-legal-compliance-kenya.pdf',
-  },
+
+  nav: [
+    { name: 'Home', href: '/' },
+    { name: 'Services', href: '/services' },
+    { name: 'Portfolio', href: '/portfolio' },
+    { name: 'Writing', href: '/insights' },
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
+  ],
 } as const

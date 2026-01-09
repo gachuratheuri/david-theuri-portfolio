@@ -1,101 +1,99 @@
-﻿import { Resend } from 'resend'
-import { rateLimit } from '@/lib/rate-limit'
+﻿import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { env, isProd } from '@/lib/env'
 import { siteConfig } from '@/lib/site'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-export const runtime = 'nodejs'
+const BodySchema = z.object({
+  name: z.string().min(2).max(120),
+  email: z.string().email().max(200),
+  purpose: z.string().max(200).optional().or(z.literal('')),
+  message: z.string().min(20).max(5000),
+  company: z.string().max(200).optional().or(z.literal('')), // honeypot
+})
 
-function getClientIp(request: Request): string {
-  const xff = request.headers.get('x-forwarded-for')
-  if (xff) return xff.split(',')[0]?.trim() || 'unknown'
-  return request.headers.get('x-real-ip') || 'unknown'
+function getIp(req: Request) {
+  const xff = req.headers.get('x-forwarded-for') ?? ''
+  const first = xff
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .at(0)
+
+  return first ?? req.headers.get('x-real-ip') ?? '0.0.0.0'
 }
 
-function isValidEmail(email: string): boolean {
-  if (email.length > 254) return false
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
-
-export async function POST(request: Request) {
-  const ip = getClientIp(request)
-  const limiter = rateLimit({ key: `contact:${ip}`, limit: 5, windowMs: 10 * 60 * 1000 })
-
-  if (!limiter.allowed) {
-    return Response.json(
-      { ok: false, error: 'Rate limit exceeded', retryAfterSeconds: limiter.retryAfterSeconds },
-      { status: 429, headers: { 'Retry-After': String(limiter.retryAfterSeconds) } }
-    )
-  }
-
-  const contentType = request.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    return Response.json({ ok: false, error: 'Invalid content type' }, { status: 415 })
-  }
-
-  let body: any
+function originAllowed(req: Request) {
+  const origin = req.headers.get('origin')
+  if (!isProd) return true
+  if (!origin) return false
   try {
-    body = await request.json()
+    return new URL(origin).host === new URL(siteConfig.siteUrl).host
   } catch {
-    return Response.json({ ok: false, error: 'Invalid JSON' }, { status: 400 })
+    return false
   }
+}
 
-  const name = String(body?.name ?? '').trim()
-  const email = String(body?.email ?? '').trim()
-  const purpose = String(body?.purpose ?? '').trim()
-  const message = String(body?.message ?? '').trim()
-  const company = String(body?.company ?? '').trim() // honeypot
+async function rateLimit(req: Request) {
+  if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) return { ok: true as const }
 
-  if (company.length > 0) {
-    return Response.json({ ok: true }, { status: 200 })
-  }
-
-  if (name.length < 2 || name.length > 120) {
-    return Response.json({ ok: false, error: 'Invalid name' }, { status: 400 })
-  }
-  if (!isValidEmail(email)) {
-    return Response.json({ ok: false, error: 'Invalid email' }, { status: 400 })
-  }
-  if (message.length < 20 || message.length > 8000) {
-    return Response.json({ ok: false, error: 'Invalid message length' }, { status: 400 })
-  }
-  if (purpose.length > 80) {
-    return Response.json({ ok: false, error: 'Invalid purpose' }, { status: 400 })
-  }
-
-  const resendKey = process.env.RESEND_API_KEY
-  if (!resendKey) {
-    return Response.json({ ok: false, error: 'Server not configured' }, { status: 500 })
-  }
-
-  const from = process.env.RESEND_FROM
-  if (!from) {
-    return Response.json({ ok: false, error: 'Missing RESEND_FROM' }, { status: 500 })
-  }
-
-  const to = process.env.CONTACT_EMAIL || siteConfig.email
-  const resend = new Resend(resendKey)
-
-  const subject = `Portfolio contact${purpose ? ` — ${purpose}` : ''} — ${name}`
-
-  const text = [
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `Purpose: ${purpose || '(not specified)'}`,
-    `IP: ${ip}`,
-    '',
-    message,
-  ].join('\n')
-
-  const { error } = await resend.emails.send({
-    from,
-    to,
-    replyTo: email,
-    subject,
-    text,
+  const redis = new Redis({ url: env.UPSTASH_REDIS_REST_URL, token: env.UPSTASH_REDIS_REST_TOKEN })
+  const ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '10 m'),
+    analytics: true,
+    prefix: 'contact',
   })
 
-  if (error) {
-    return Response.json({ ok: false, error: 'Email send failed' }, { status: 502 })
+  const ip = getIp(req)
+  const { success, reset } = await ratelimit.limit(ip)
+  return { ok: success, reset }
+}
+
+export async function POST(req: Request) {
+  if (!originAllowed(req)) {
+    return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 })
   }
 
-  return Response.json({ ok: true }, { status: 200 })
+  const rl = await rateLimit(req)
+  if (!rl.ok) {
+    return NextResponse.json({ ok: false, error: 'Rate limited' }, { status: 429 })
+  }
+
+  const json = await req.json().catch(() => null)
+  const parsed = BodySchema.safeParse(json)
+  if (!parsed.success) {
+    return NextResponse.json({ ok: false, error: 'Invalid payload' }, { status: 400 })
+  }
+
+  const { name, email, purpose, message, company } = parsed.data
+
+  // Honeypot => pretend success
+  if (company && company.trim().length > 0) return NextResponse.json({ ok: true })
+
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM) {
+    return NextResponse.json({ ok: false, error: 'Email service not configured' }, { status: 503 })
+  }
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.RESEND_FROM,
+      to: [siteConfig.email],
+      reply_to: email,
+      subject: `Website contact: ${purpose ? `${purpose} — ` : ''}${name}`,
+      text: `From: ${name} <${email}>\nPurpose: ${purpose ?? ''}\n\n${message}`,
+    }),
+  })
+
+  if (!res.ok) {
+    return NextResponse.json({ ok: false, error: 'Send failed' }, { status: 502 })
+  }
+
+  return NextResponse.json({ ok: true })
 }
