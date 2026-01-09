@@ -1,4 +1,13 @@
 ﻿* text=auto
 
+# Content
 *.md  text eol=lf
 *.mdx text eol=lf
+
+# Code
+*.ts  text eol=lf
+*.tsx text eol=lf
+*.js  text eol=lf
+*.mjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
