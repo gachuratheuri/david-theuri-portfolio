@@ -12,6 +12,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteConfig.siteUrl}/insights`, lastModified: now },
     { url: `${siteConfig.siteUrl}/about`, lastModified: now },
     { url: `${siteConfig.siteUrl}/contact`, lastModified: now },
+
+    // Legal hygiene
+    { url: `${siteConfig.siteUrl}/legal`, lastModified: now },
+    { url: `${siteConfig.siteUrl}/legal/privacy`, lastModified: now },
+    { url: `${siteConfig.siteUrl}/legal/cookies`, lastModified: now },
+    { url: `${siteConfig.siteUrl}/legal/disclaimer`, lastModified: now },
+    { url: `${siteConfig.siteUrl}/legal/terms`, lastModified: now },
   ]
 
   const insightRoutes: MetadataRoute.Sitemap = allInsights.map((p) => ({
