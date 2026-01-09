@@ -45,3 +45,4 @@ next-env.d.ts
 
 # Contentlayer Generated Files (Build Artifacts)
 .contentlayer
+.vercel
